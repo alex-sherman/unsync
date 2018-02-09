@@ -15,25 +15,27 @@ Unsynchronize `asyncio` by using an ambient event loop in a separate thread.
 # Examples
 ## Simple Sleep
 A simple sleeping example with `asyncio`:
+```python
+import asyncio
 
-    import asyncio
-    
-    async def sync_async():
-        await asyncio.sleep(0.1)
-        return 'I hate event loops'
-    
-    annoying_event_loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(sync_async(), loop=annoying_event_loop)
-    annoying_event_loop.run_until_complete(future)
-    print(future.result())
+async def sync_async():
+    await asyncio.sleep(0.1)
+    return 'I hate event loops'
+
+annoying_event_loop = asyncio.get_event_loop()
+future = asyncio.ensure_future(sync_async(), loop=annoying_event_loop)
+annoying_event_loop.run_until_complete(future)
+print(future.result())
+```
 
 Same example with `unsync`:
+```python
+from unsync import unsync
 
-    from unsync import unsync
-    
-    @unsync
-    async def unsync_async():
-        await asyncio.sleep(0.1)
-        return 'I like decorators'
-    
-    print(unsync_async().result())
+@unsync
+async def unsync_async():
+    await asyncio.sleep(0.1)
+    return 'I like decorators'
+
+print(unsync_async().result())
+```
