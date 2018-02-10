@@ -1,5 +1,6 @@
 import asyncio
 import concurrent
+import threading
 from functools import wraps
 from threading import Thread
 
@@ -26,6 +27,13 @@ class Unfuture:
     __await__ = __iter__
 
     def result(self, *args, **kwargs):
+        # The asyncio Future may have completed before the concurrent one
+        if self.future.done():
+            return self.future.result()
+        # Don't allow waiting in the unsync.thread loop since it will deadlock
+        if threading.current_thread() == unsync.thread and not self.concurrent_future.done():
+            raise asyncio.InvalidStateError
+        # Wait on the concurrent Future outside unsync.thread
         return self.concurrent_future.result(*args, **kwargs)
 
     @property
