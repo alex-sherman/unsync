@@ -55,6 +55,10 @@ tasks = [non_async_function(0.1) for _ in range(10)]
 print([task.result() for task in tasks])
 print('Executed in {} seconds'.format(time.time() - start))
 ```
+Which prints:
+
+    ['Run in parallel!', 'Run in parallel!', ...]
+    Executed in 0.10807514190673828 seconds
 
 ## Continuations
 Using Unfuture.then chains asynchronous calls and returns an Unfuture that wraps both the source, and continuation.
