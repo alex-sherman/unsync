@@ -1,5 +1,7 @@
 import time
 
+import asyncio
+
 from unsync import unsync
 
 # All Unfutures are compatible regardless of how they were started
@@ -11,11 +13,12 @@ def non_async_function(num):
     time.sleep(0.1)
     return num, num + 1
 
-
-def result_continuation(task):
+@unsync
+async def result_continuation(task):
     """A preliminary result processor we'll chain on to the original task
        This will get executed wherever the source task was executed, in this
        case one of the threads in the ThreadPoolExecutor"""
+    await asyncio.sleep(0.1)
     num, res = task.result()
     return num, res * 2
 

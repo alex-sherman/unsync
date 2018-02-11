@@ -59,6 +59,7 @@ print('Executed in {} seconds'.format(time.time() - start))
 ## Continuations
 Using Unfuture.then chains asynchronous calls and returns an Unfuture that wraps both the source, and continuation.
 The continuation is invoked with the source Unfuture as the first argument.
+Continuations can be regular functions (which will execute synchronously), or `@unsync` functions.
 ```python
 @unsync
 async def initiate(request):
@@ -88,13 +89,15 @@ def non_async_function(num):
     time.sleep(0.1)
     return num, num + 1
 ```
-We may want to refine the result in another function, so we define the following continuation
+We may want to refine the result in another function, so we define the following continuation.
 ```python
-def result_continuation(task):
+@unsync
+async def result_continuation(task):
+    await asyncio.sleep(0.1)
     num, res = task.result()
     return num, res * 2
 ```
-We then aggregate all the results into a single dictionary in an async function
+We then aggregate all the results into a single dictionary in an async function.
 ```python
 @unsync
 async def result_processor(tasks):
@@ -114,4 +117,4 @@ print('Executed in {} seconds'.format(time.time() - start))
 Which prints:
 
     {0: 2, 1: 4, 2: 6, 3: 8, 4: 10, 5: 12, 6: 14, 7: 16, 8: 18, 9: 20}
-    Executed in 0.11106109619140625 seconds
+    Executed in 0.22115683555603027 seconds
