@@ -1,11 +1,13 @@
 import asyncio
 import concurrent
+import inspect
 import threading
 from functools import wraps
 from threading import Thread
 
 
 class unsync(object):
+    executor = concurrent.futures.ThreadPoolExecutor()
     loop = asyncio.new_event_loop()
     thread = None
 
@@ -21,7 +23,11 @@ class unsync(object):
         wraps(self.__call__)(self.f)
 
     def __call__(self, *args, **kwargs):
-        return Unfuture(self.f(*args, **kwargs))
+        if inspect.iscoroutinefunction(self.f):
+            future = self.f(*args, **kwargs)
+        else:
+            future = unsync.executor.submit(self.f, *args, **kwargs)
+        return Unfuture(future)
 
     def __get__(self, instance, owner):
         return lambda *args, **kwargs: self(instance, *args, **kwargs)
@@ -42,6 +48,7 @@ class Unfuture:
                 if self.concurrent_future.set_running_or_notify_cancel():
                     self.concurrent_future.set_exception(exc)
                 raise
+
         if asyncio.iscoroutine(future):
             future = asyncio.ensure_future(future, loop=unsync.loop)
         if isinstance(future, concurrent.futures.Future):
