@@ -1,1 +1,1 @@
-from unsync.unsync import unsync
+from unsync.unsync import unsync, Unfuture

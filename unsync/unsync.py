@@ -5,45 +5,6 @@ from functools import wraps
 from threading import Thread
 
 
-class Unfuture:
-    def __init__(self, future=None):
-        self.future = future or asyncio.Future(loop=unsync.loop)
-        concurrent_future = concurrent.futures.Future()
-
-        def callback():
-            try:
-                asyncio.futures._chain_future(self.future, concurrent_future)
-            except Exception as exc:
-                if concurrent_future.set_running_or_notify_cancel():
-                    concurrent_future.set_exception(exc)
-                raise
-
-        self.future._loop.call_soon_threadsafe(callback)
-        self.concurrent_future = concurrent_future
-
-    def __iter__(self):
-        return self.future.__iter__()
-
-    __await__ = __iter__
-
-    def result(self, *args, **kwargs):
-        # The asyncio Future may have completed before the concurrent one
-        if self.future.done():
-            return self.future.result()
-        # Don't allow waiting in the unsync.thread loop since it will deadlock
-        if threading.current_thread() == unsync.thread and not self.concurrent_future.done():
-            raise asyncio.InvalidStateError
-        # Wait on the concurrent Future outside unsync.thread
-        return self.concurrent_future.result(*args, **kwargs)
-
-    @property
-    def state(self):
-        return self.future._state
-
-    def set_result(self, value):
-        return self.future._loop.call_soon_threadsafe(lambda: self.future.set_result(value))
-
-
 class unsync(object):
     loop = asyncio.new_event_loop()
     thread = None
@@ -60,8 +21,68 @@ class unsync(object):
         wraps(self.__call__)(self.f)
 
     def __call__(self, *args, **kwargs):
-        return Unfuture(asyncio.ensure_future(self.f(*args, **kwargs), loop=self.loop))
+        return Unfuture(self.f(*args, **kwargs))
+
+    def __get__(self, instance, owner):
+        return lambda *args, **kwargs: self(instance, *args, **kwargs)
 
 
+class Unfuture:
+    @staticmethod
+    def from_value(value):
+        future = Unfuture()
+        future.set_result(value)
+        return future
+
+    def __init__(self, future=None):
+        def callback(source, target):
+            try:
+                asyncio.futures._chain_future(source, target)
+            except Exception as exc:
+                if self.concurrent_future.set_running_or_notify_cancel():
+                    self.concurrent_future.set_exception(exc)
+                raise
+        if asyncio.iscoroutine(future):
+            future = asyncio.ensure_future(future, loop=unsync.loop)
+        if isinstance(future, concurrent.futures.Future):
+            self.concurrent_future = future
+            self.future = asyncio.Future(loop=unsync.loop)
+            self.future._loop.call_soon_threadsafe(callback, self.concurrent_future, self.future)
+        else:
+            self.future = future or asyncio.Future(loop=unsync.loop)
+            self.concurrent_future = concurrent.futures.Future()
+            self.future._loop.call_soon_threadsafe(callback, self.future, self.concurrent_future)
+
+    def __iter__(self):
+        return self.future.__iter__()
+
+    __await__ = __iter__
+
+    def result(self, *args, **kwargs):
+        # The asyncio Future may have completed before the concurrent one
+        if self.future.done():
+            return self.future.result()
+        # Don't allow waiting in the unsync.thread loop since it will deadlock
+        if threading.current_thread() == unsync.thread and not self.concurrent_future.done():
+            raise asyncio.InvalidStateError
+        # Wait on the concurrent Future outside unsync.thread
+        return self.concurrent_future.result(*args, **kwargs)
+
+    def done(self):
+        return self.future.done() or self.concurrent_future.done()
+
+    def set_result(self, value):
+        return self.future._loop.call_soon_threadsafe(lambda: self.future.set_result(value))
+
+    @unsync
+    async def then(self, continuation):
+        await self
+        result = continuation(self)
+        if hasattr(result, '__await__'):
+            return await result
+        return result
+
+
+asyncio.set_event_loop(unsync.loop)
 unsync.thread = Thread(target=unsync.thread_target, args=(unsync.loop,), daemon=True)
 unsync.thread.start()

@@ -8,5 +8,5 @@ setup(
     license='MIT',
     author='Alex-Sherman',
     author_email='asherman1024@gmail.com',
-    description='Unsynchronize asyncio'
+    description='Unsynchronize asyncio',
 )
