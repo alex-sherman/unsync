@@ -20,7 +20,6 @@ class unsync(object):
         self.args = args
         self.kwargs = kwargs
         self.f = args[0]
-        wraps(self.__call__)(self.f)
 
     def __call__(self, *args, **kwargs):
         if inspect.iscoroutinefunction(self.f):

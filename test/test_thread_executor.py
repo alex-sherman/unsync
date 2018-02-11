@@ -10,6 +10,14 @@ from unsync import *
 class ThreadedTests(TestCase):
 
     def test_unsync_threaded(self):
+        @unsync
+        def non_async_work():
+            time.sleep(0.1)
+            return 'faff'
+
+        self.assertEqual('faff', non_async_work().result())
+
+    def test_unsync_threaded_with_await(self):
         def non_async_work():
             time.sleep(0.1)
             return 'faff'

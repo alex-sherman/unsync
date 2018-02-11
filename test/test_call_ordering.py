@@ -24,8 +24,7 @@ class CallOrderingTests(TestCase):
 
         @unsync
         async def long(task):
-            result = task().result()
-            return result
+            return task().result()
 
         with raises(asyncio.InvalidStateError):
             self.assertEqual('faff', long(other).result())
