@@ -74,3 +74,10 @@ class DecoratorTests(TestCase):
                 return 'faff'
 
         self.assertEqual('faff', Class().wait().result())
+
+    def test_passing_arguments(self):
+        @unsync(faff='faff')
+        def cpu_bound():
+            return 'faff'
+
+        self.assertEqual('faff', cpu_bound().result())

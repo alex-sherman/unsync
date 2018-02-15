@@ -2,14 +2,15 @@ import asyncio
 import concurrent
 import inspect
 import threading
-from functools import wraps
 from threading import Thread
 
 
 class unsync(object):
-    executor = concurrent.futures.ThreadPoolExecutor()
+    thread_executor = concurrent.futures.ThreadPoolExecutor()
+    process_executor = concurrent.futures.ProcessPoolExecutor()
     loop = asyncio.new_event_loop()
     thread = None
+    unsync_functions = {}
 
     @staticmethod
     def thread_target(loop):
@@ -17,19 +18,44 @@ class unsync(object):
         loop.run_forever()
 
     def __init__(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-        self.f = args[0]
+        self.args = []
+        self.kwargs = {}
+        if len(args) == 1 and inspect.isfunction(args[0]):
+            self._set_func(args[0])
+        else:
+            self.args = args
+            self.kwargs = kwargs
+            self.func = None
+
+    @property
+    def cpu_bound(self):
+        return 'cpu_bound' in self.kwargs and self.kwargs['cpu_bound']
+
+    def _set_func(self, func):
+        assert inspect.isfunction(func)
+        self.func = func
+        unsync.unsync_functions[(func.__module__, func.__name__)] = func
 
     def __call__(self, *args, **kwargs):
-        if inspect.iscoroutinefunction(self.f):
-            future = self.f(*args, **kwargs)
+        if self.func is None:
+            self._set_func(args[0])
+            return self
+        if inspect.iscoroutinefunction(self.func):
+            future = self.func(*args, **kwargs)
         else:
-            future = unsync.executor.submit(self.f, *args, **kwargs)
+            if self.cpu_bound:
+                future = unsync.process_executor.submit(
+                    _multiprocess_target, (self.func.__module__ , self.func.__name__), *args, **kwargs)
+            else:
+                future = unsync.thread_executor.submit(self.func, *args, **kwargs)
         return Unfuture(future)
 
     def __get__(self, instance, owner):
         return lambda *args, **kwargs: self(instance, *args, **kwargs)
+
+def _multiprocess_target(func_name, *args, **kwargs):
+    __import__(func_name[0])
+    return unsync.unsync_functions[func_name](*args, **kwargs)
 
 
 class Unfuture:
