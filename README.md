@@ -10,11 +10,13 @@ Unsynchronize `asyncio` by using an ambient event loop in a separate thread.
     * `Unfuture.set_value` is threadsafe unlike `asyncio.Future`
     * `Unfuture` instances can be awaited, even if made from `concurrent.Future`
     * `Unfuture.result()` is a blocking operation *except* in `unsync.loop`/`unsync.thread` where
-    it behaves like `asyncio.Future.result` and will throw an exception if the future is not done.
-3. All `@unsync` async functions will execute in `unsync.thread`.
-    All `@unsync` regular function will execute in `unsync.executor`.
-4. `unsync` is only useful for IO-bound workloads, it will offer
-    no speedup for CPU-bound workloads.
+    it behaves like `asyncio.Future.result` and will throw an exception if the future is not done
+3. Functions will execute in different contexts:
+    * `@unsync` async functions will execute in an event loop in `unsync.thread`
+    * `@unsync` regular functions will execute in `unsync.thread_executor`, a `ThreadPoolExecutor`
+    * `@unsync(cpu_bound=True)` regular functions will execute in `unsync.process_executor`, a `ProcessPoolExecutor`
+4. For CPU bound workloads, use `@unsync(cpu_bound=True)`, on a regular non-async function to have
+it execute in a separate process **experimental/spooky**
 
 
 # Examples
