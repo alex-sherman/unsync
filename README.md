@@ -15,8 +15,6 @@ Unsynchronize `asyncio` by using an ambient event loop in a separate thread.
     * `@unsync` async functions will execute in an event loop in `unsync.thread`
     * `@unsync` regular functions will execute in `unsync.thread_executor`, a `ThreadPoolExecutor`
     * `@unsync(cpu_bound=True)` regular functions will execute in `unsync.process_executor`, a `ProcessPoolExecutor`
-4. For CPU bound workloads, use `@unsync(cpu_bound=True)`, on a regular non-async function to have
-it execute in a separate process **experimental/spooky**
 
 
 # Examples
