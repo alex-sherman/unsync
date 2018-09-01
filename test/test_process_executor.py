@@ -12,10 +12,9 @@ def cpu_bound(duration):
         faff += 1
     return 'faff'
 
-
-
-@pytest.mark.skip
 class ProcessTests(TestCase):
+    def test_raw_cpu_bound(self):
+        cpu_bound(0.01).result()
     def test_cpu_bound(self):
         @unsync
         async def aggregator(tasks):

@@ -2,6 +2,7 @@ import asyncio
 import concurrent
 import inspect
 import threading
+import os
 from threading import Thread
 
 
@@ -41,11 +42,13 @@ class unsync(object):
             self._set_func(args[0])
             return self
         if inspect.iscoroutinefunction(self.func):
+            if self.cpu_bound:
+                raise TypeError('The CPU bound unsync function %s may not be async or a coroutine' % self.func.__name__)
             future = self.func(*args, **kwargs)
         else:
             if self.cpu_bound:
                 future = unsync.process_executor.submit(
-                    _multiprocess_target, (self.func.__module__ , self.func.__name__), *args, **kwargs)
+                    _multiprocess_target, (self.func.__module__, self.func.__name__), *args, **kwargs)
             else:
                 future = unsync.thread_executor.submit(self.func, *args, **kwargs)
         return Unfuture(future)
@@ -54,6 +57,9 @@ class unsync(object):
         return lambda *args, **kwargs: self(instance, *args, **kwargs)
 
 def _multiprocess_target(func_name, *args, **kwargs):
+    # On Windows MP turns the main module into __mp_main__ in multiprocess targets
+    if os.name == 'nt' and func_name[0] == '__main__':
+        func_name = ('__mp_main__', func_name[1])
     __import__(func_name[0])
     return unsync.unsync_functions[func_name](*args, **kwargs)
 

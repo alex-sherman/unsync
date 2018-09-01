@@ -29,6 +29,18 @@ class CallOrderingTests(TestCase):
         with raises(asyncio.InvalidStateError):
             self.assertEqual('faff', long(other).result())
 
+    def test_nested_unsync(self):
+        @unsync
+        async def long():
+            @unsync
+            async def other():
+                await asyncio.sleep(0.1)
+                return 'faff'
+            return other().result()
+
+        with raises(asyncio.InvalidStateError):
+            self.assertEqual('faff', long().result())
+
     def test_nested_blocking_on_result_after_await(self):
         calls = []
 
