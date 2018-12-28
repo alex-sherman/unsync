@@ -1,6 +1,6 @@
+from functools import wraps
 from unittest import TestCase
 
-import time
 from pytest import raises
 from unsync import unsync
 import asyncio
@@ -81,3 +81,19 @@ class DecoratorTests(TestCase):
             return 'faff'
 
         self.assertEqual('faff', cpu_bound().result())
+
+    def test_nested_decorator_retains_wrapped_function_attributes(self):
+        def on(attr_value):
+            @wraps(attr_value)
+            def wrapper(f):
+                f.attr_name = attr_value
+                return f
+
+            return wrapper
+
+        @on("faff")
+        @unsync
+        def some_func(): pass
+
+        assert some_func.attr_name == "faff"
+        assert some_func.__name__ == "some_func"
