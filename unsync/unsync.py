@@ -1,5 +1,6 @@
 import asyncio
 import concurrent
+import functools
 import inspect
 import threading
 import os
@@ -35,6 +36,7 @@ class unsync(object):
     def _set_func(self, func):
         assert inspect.isfunction(func)
         self.func = func
+        functools.update_wrapper(self, func)
         unsync.unsync_functions[(func.__module__, func.__name__)] = func
 
     def __call__(self, *args, **kwargs):
