@@ -107,3 +107,13 @@ class DecoratorTests(TestCase):
             return await wait()
 
         self.assertEqual('faff', unsync_func().result())
+
+    def test_regular_main_thread_async(self):
+        async def wait():
+            await asyncio.sleep(0.1)
+            return 'faff'
+        @unsync
+        async def unsync_func(future):
+            return await future
+
+        self.assertEqual('faff', unsync_func(wait()).result())
