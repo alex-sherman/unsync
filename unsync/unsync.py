@@ -122,7 +122,5 @@ class Unfuture:
             return await result
         return result
 
-
-asyncio.set_event_loop(unsync.loop)
 unsync.thread = Thread(target=unsync.thread_target, args=(unsync.loop,), daemon=True)
 unsync.thread.start()

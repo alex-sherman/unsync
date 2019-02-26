@@ -97,3 +97,13 @@ class DecoratorTests(TestCase):
 
         assert some_func.attr_name == "faff"
         assert some_func.__name__ == "some_func"
+
+    def test_regular_async(self):
+        async def wait():
+            await asyncio.sleep(0.1)
+            return 'faff'
+        @unsync
+        async def unsync_func():
+            return await wait()
+
+        self.assertEqual('faff', unsync_func().result())
