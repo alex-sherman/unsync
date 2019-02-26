@@ -2,8 +2,6 @@ from unittest import TestCase
 
 import asyncio
 
-from pytest import raises
-
 from unsync import *
 
 
@@ -26,7 +24,7 @@ class CallOrderingTests(TestCase):
         async def long(task):
             return task().result()
 
-        with raises(asyncio.InvalidStateError):
+        with self.assertRaises(asyncio.InvalidStateError):
             self.assertEqual('faff', long(other).result())
 
     def test_nested_unsync(self):
@@ -38,7 +36,7 @@ class CallOrderingTests(TestCase):
                 return 'faff'
             return other().result()
 
-        with raises(asyncio.InvalidStateError):
+        with self.assertRaises(asyncio.InvalidStateError):
             self.assertEqual('faff', long().result())
 
     def test_nested_blocking_on_result_after_await(self):
