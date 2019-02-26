@@ -1,5 +1,6 @@
 import asyncio
 import time
+
 from unsync import unsync
 
 # Using Unfuture.then chains asynchronous calls and returns an Unfuture that wraps both the source, and continuation

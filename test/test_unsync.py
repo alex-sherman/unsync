@@ -1,8 +1,8 @@
 from functools import wraps
 from unittest import TestCase
+import asyncio
 
 from unsync import unsync
-import asyncio
 from unsync.unsync import Unfuture
 
 
