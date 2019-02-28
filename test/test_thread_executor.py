@@ -1,6 +1,7 @@
 from unittest import TestCase
 import asyncio
 import time
+
 from unsync import *
 
 
@@ -21,7 +22,7 @@ class ThreadedTests(TestCase):
 
         @unsync
         async def wait(_future):
-            asyncio.sleep(0.1)
+            await asyncio.sleep(0.1)
             return await _future
 
         future = unsync(non_async_work)()

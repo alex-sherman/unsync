@@ -1,4 +1,5 @@
 import asyncio
+
 from unsync import unsync
 
 # Synchronous style

@@ -1,6 +1,6 @@
 from unittest import TestCase
 import time
-import pytest
+
 from unsync import *
 
 

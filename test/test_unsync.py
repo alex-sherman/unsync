@@ -1,9 +1,8 @@
 from functools import wraps
 from unittest import TestCase
-
-from pytest import raises
-from unsync import unsync
 import asyncio
+
+from unsync import unsync
 from unsync.unsync import Unfuture
 
 
@@ -18,7 +17,7 @@ class DecoratorTests(TestCase):
             await asyncio.sleep(0.1)
             raise TestException
 
-        with raises(TestException):
+        with self.assertRaises(TestException):
             error().result()
 
     def test_parallelism(self):
@@ -45,7 +44,7 @@ class DecoratorTests(TestCase):
             return await _future
 
         result = wrapper(asyncio_future)
-        with raises(asyncio.TimeoutError):
+        with self.assertRaises(asyncio.TimeoutError):
             result.result(timeout=0.1)
         self.assertFalse(result.done())
         unsync.loop.call_soon_threadsafe(lambda: asyncio_future.set_result('faff'))
@@ -60,7 +59,7 @@ class DecoratorTests(TestCase):
             return result
 
         result = wrapper(unfuture)
-        with raises(asyncio.TimeoutError):
+        with self.assertRaises(asyncio.TimeoutError):
             result.result(timeout=0.1)
         self.assertFalse(result.done())
         unfuture.set_result('faff')
