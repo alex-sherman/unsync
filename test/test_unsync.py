@@ -95,7 +95,7 @@ class DecoratorTests(TestCase):
         def some_func(): pass
 
         assert some_func.attr_name == "faff"
-        assert some_func.__name__ == "some_func"
+        assert some_func.func.__name__ == "some_func"
 
     def test_regular_async(self):
         async def wait():
