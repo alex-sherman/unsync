@@ -81,38 +81,39 @@ class DecoratorTests(TestCase):
 
         self.assertEqual('faff', cpu_bound().result())
 
-    def test_nested_decorator_retains_wrapped_function_attributes(self):
-        def on(attr_value):
-            @wraps(attr_value)
-            def wrapper(f):
-                f.attr_name = attr_value
-                return f
 
-            return wrapper
+def set_attr(attr_value):
+    """
+    Sample decorator for testing nested unsync decorators.
+    """
+    @wraps(attr_value)
+    def wrapper(f):
+        f.attr = attr_value
+        return f
 
-        @on("faff")
+    return wrapper
+
+
+class NestedDecoratorTests(TestCase):
+    @classmethod
+    def test_nested_decorator_retains_wrapped_function_attributes(cls):
+
         @unsync
-        def some_func(): pass
+        @set_attr("faff")
+        async def wrapped_func(): pass
 
-        assert some_func.attr_name == "faff"
-        assert some_func.__name__ == "some_func"
+        assert wrapped_func.__name__ == "wrapped_func"
+        assert wrapped_func.attr == "faff"
 
-    def test_regular_async(self):
-        async def wait():
-            await asyncio.sleep(0.1)
-            return 'faff'
-        @unsync
-        async def unsync_func():
-            return await wait()
+    @classmethod
+    def test_nested_decorator_retains_wrapped_class_method_attributes(cls):
 
-        self.assertEqual('faff', unsync_func().result())
+        class Class:
 
-    def test_regular_main_thread_async(self):
-        async def wait():
-            await asyncio.sleep(0.1)
-            return 'faff'
-        @unsync
-        async def unsync_func(future):
-            return await future
+            @unsync
+            @set_attr("faff")
+            async def wrapped_func(self): pass
 
-        self.assertEqual('faff', unsync_func(wait()).result())
+        instance = Class()
+        assert instance.wrapped_func.__name__ == "wrapped_func"
+        assert instance.wrapped_func.attr == "faff"
