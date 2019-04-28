@@ -95,8 +95,7 @@ def set_attr(attr_value):
 
 
 class NestedDecoratorTests(TestCase):
-    @classmethod
-    def test_nested_decorator_retains_wrapped_function_attributes(cls):
+    def test_nested_decorator_retains_wrapped_function_attributes(self):
 
         @unsync
         @set_attr("faff")
@@ -105,8 +104,7 @@ class NestedDecoratorTests(TestCase):
         assert wrapped_func.__name__ == "wrapped_func"
         assert wrapped_func.attr == "faff"
 
-    @classmethod
-    def test_nested_decorator_retains_wrapped_class_method_attributes(cls):
+    def test_nested_decorator_retains_wrapped_class_method_attributes(self):
 
         class Class:
 
