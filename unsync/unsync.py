@@ -56,7 +56,12 @@ class unsync(object):
         return Unfuture(future)
 
     def __get__(self, instance, owner):
-        return lambda *args, **kwargs: self(instance, *args, **kwargs)
+        def _call(*args, **kwargs):
+            return self(instance, *args, **kwargs)
+
+        functools.update_wrapper(_call, self.func)
+        return _call
+
 
 def _multiprocess_target(func_name, *args, **kwargs):
     # On Windows MP turns the main module into __mp_main__ in multiprocess targets
@@ -121,6 +126,7 @@ class Unfuture:
         if hasattr(result, '__await__'):
             return await result
         return result
+
 
 unsync.thread = Thread(target=unsync.thread_target, args=(unsync.loop,), daemon=True)
 unsync.thread.start()
