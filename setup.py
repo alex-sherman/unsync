@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='unsync',
-    version='1.1',
+    version='1.2',
     packages=['unsync'],
     url='https://github.com/alex-sherman/unsync',
     license='MIT',
