@@ -5,6 +5,7 @@ import inspect
 import threading
 import os
 from threading import Thread
+from typing import Generic, TypeVar
 
 
 class unsync(object):
@@ -71,7 +72,9 @@ def _multiprocess_target(func_name, *args, **kwargs):
     return unsync.unsync_functions[func_name](*args, **kwargs)
 
 
-class Unfuture:
+T = TypeVar('T')
+
+class Unfuture(Generic[T]):
     @staticmethod
     def from_value(value):
         future = Unfuture()
@@ -103,7 +106,7 @@ class Unfuture:
 
     __await__ = __iter__
 
-    def result(self, *args, **kwargs):
+    def result(self, *args, **kwargs) -> T:
         # The asyncio Future may have completed before the concurrent one
         if self.future.done():
             return self.future.result()
