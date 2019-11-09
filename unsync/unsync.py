@@ -10,7 +10,7 @@ from typing import Generic, TypeVar
 
 class unsync(object):
     thread_executor = concurrent.futures.ThreadPoolExecutor()
-    process_executor = concurrent.futures.ProcessPoolExecutor()
+    process_executor = None
     loop = asyncio.new_event_loop()
     thread = None
     unsync_functions = {}
@@ -50,6 +50,8 @@ class unsync(object):
             future = self.func(*args, **kwargs)
         else:
             if self.cpu_bound:
+                if unsync.process_executor is None:
+                    unsync.process_executor = concurrent.futures.ProcessPoolExecutor()
                 future = unsync.process_executor.submit(
                     _multiprocess_target, (self.func.__module__, self.func.__name__), *args, **kwargs)
             else:
