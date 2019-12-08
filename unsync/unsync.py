@@ -65,8 +65,8 @@ class unsync(object):
         functools.update_wrapper(_call, self.func)
         return _call
 
-def _isfunction(object):
-    return inspect.isfunction(object) or inspect._signature_is_functionlike(object)
+def _isfunction(obj):
+    return inspect.isfunction(obj) or inspect._signature_is_functionlike(obj)
 
 def _multiprocess_target(func_name, *args, **kwargs):
     # On Windows MP turns the main module into __mp_main__ in multiprocess targets
