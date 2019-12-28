@@ -23,7 +23,7 @@ class unsync(object):
     def __init__(self, *args, **kwargs):
         self.args = []
         self.kwargs = {}
-        if len(args) == 1 and inspect.isfunction(args[0]):
+        if len(args) == 1 and _isfunction(args[0]):
             self._set_func(args[0])
         else:
             self.args = args
@@ -35,7 +35,7 @@ class unsync(object):
         return 'cpu_bound' in self.kwargs and self.kwargs['cpu_bound']
 
     def _set_func(self, func):
-        assert inspect.isfunction(func)
+        assert _isfunction(func)
         self.func = func
         functools.update_wrapper(self, func)
         unsync.unsync_functions[(func.__module__, func.__name__)] = func
@@ -65,6 +65,8 @@ class unsync(object):
         functools.update_wrapper(_call, self.func)
         return _call
 
+def _isfunction(obj):
+    return inspect.isfunction(obj) or inspect._signature_is_functionlike(obj)
 
 def _multiprocess_target(func_name, *args, **kwargs):
     # On Windows MP turns the main module into __mp_main__ in multiprocess targets
