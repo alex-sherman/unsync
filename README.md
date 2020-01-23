@@ -120,3 +120,27 @@ Which prints:
 
     {0: 2, 1: 4, 2: 6, 3: 8, 4: 10, 5: 12, 6: 14, 7: 16, 8: 18, 9: 20}
     Executed in 0.22115683555603027 seconds
+    
+## Preserving typing
+As far as we know it is not possible to change the return type of a method or function using a decorator.
+Therefore, we need a workaround to properly use IntelliSense. You have three options in general:
+
+1. Ignore type warnings.
+2. Use a suppression statement where you reach the type warning.
+
+    A. When defining the unsynced method by changing the return type to an `Unfuture`.
+    
+    B. When using the unsynced method.
+    
+3. Wrap the function without a decorator. Example:
+    ```python 
+    def function_name(x: str) -> Unfuture[str]:
+        async_method = unsync(__function_name_synced)
+        return async_method(x)
+
+    def __function_name_synced(x: str) -> str:
+        return x + 'a'
+
+    future_result = function_name('b')
+    self.assertEqual('ba', future_result.result())
+   ```
