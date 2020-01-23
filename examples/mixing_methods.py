@@ -3,6 +3,7 @@ import asyncio
 
 from unsync import unsync
 
+
 # All Unfutures are compatible regardless of how they were started
 
 @unsync
@@ -11,6 +12,7 @@ def non_async_function(num):
        This gets executed in the ThreadPoolExecutor unsync.executor"""
     time.sleep(0.1)
     return num, num + 1
+
 
 @unsync
 async def result_continuation(task):
@@ -21,6 +23,7 @@ async def result_continuation(task):
     num, res = task.result()
     return num, res * 2
 
+
 @unsync
 async def result_processor(tasks):
     """An async result aggregator that combines all the results
@@ -30,6 +33,7 @@ async def result_processor(tasks):
         num, res = await task
         output[num] = res
     return output
+
 
 start = time.time()
 print(result_processor([non_async_function(i).then(result_continuation) for i in range(10)]).result())

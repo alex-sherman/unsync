@@ -2,7 +2,7 @@ from unittest import TestCase
 import asyncio
 import time
 
-from unsync import *
+from unsync import unsync
 
 
 class ThreadedTests(TestCase):
