@@ -81,11 +81,26 @@ class DecoratorTests(TestCase):
 
         self.assertEqual('faff', cpu_bound().result())
 
+    def test_implementation_without_decorator(self):
+        """
+        This implementation is useful to preserve type hints without an ignore statement.
+        """
+        def function_name(x: str) -> Unfuture[str]:
+            async_method = unsync(__function_name_synced)
+            return async_method(x)
+
+        def __function_name_synced(x: str) -> str:
+            return x + 'a'
+
+        future_result = function_name('b')
+        self.assertEqual('ba', future_result.result())
+
 
 def set_attr(attr_value):
     """
     Sample decorator for testing nested unsync decorators.
     """
+
     @wraps(attr_value)
     def wrapper(f):
         f.attr = attr_value
@@ -96,7 +111,6 @@ def set_attr(attr_value):
 
 class NestedDecoratorTests(TestCase):
     def test_nested_decorator_retains_wrapped_function_attributes(self):
-
         @unsync
         @set_attr("faff")
         async def wrapped_func(): pass
@@ -105,7 +119,6 @@ class NestedDecoratorTests(TestCase):
         assert wrapped_func.attr == "faff"
 
     def test_nested_decorator_retains_wrapped_class_method_attributes(self):
-
         class Class:
 
             @unsync

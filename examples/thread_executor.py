@@ -2,12 +2,14 @@ import time
 
 from unsync import unsync
 
+
 # Convert synchronous functions into Unfutures to be executed in `unsync.executor`
 
 @unsync
 def non_async_function(seconds):
     time.sleep(seconds)
     return 'Run in parallel!'
+
 
 start = time.time()
 tasks = [non_async_function(0.1) for _ in range(10)]

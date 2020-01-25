@@ -1,7 +1,7 @@
 from unittest import TestCase
 import asyncio
 
-from unsync import *
+from unsync import unsync
 
 
 class CallOrderingTests(TestCase):
