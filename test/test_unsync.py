@@ -1,6 +1,7 @@
 from functools import wraps
 from unittest import TestCase
 import asyncio
+import concurrent
 
 from unsync import unsync
 from unsync.unsync import Unfuture
@@ -44,7 +45,7 @@ class DecoratorTests(TestCase):
             return await _future
 
         result = wrapper(asyncio_future)
-        with self.assertRaises(asyncio.TimeoutError):
+        with self.assertRaises(concurrent.futures.TimeoutError):
             result.result(timeout=0.1)
         self.assertFalse(result.done())
         unsync.loop.call_soon_threadsafe(lambda: asyncio_future.set_result('faff'))
@@ -59,7 +60,7 @@ class DecoratorTests(TestCase):
             return result
 
         result = wrapper(unfuture)
-        with self.assertRaises(asyncio.TimeoutError):
+        with self.assertRaises(concurrent.futures.TimeoutError):
             result.result(timeout=0.1)
         self.assertFalse(result.done())
         unfuture.set_result('faff')
