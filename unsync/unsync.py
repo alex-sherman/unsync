@@ -119,7 +119,7 @@ class Unfuture(Generic[T]):
             return self.future.result()
         # Don't allow waiting in the unsync.thread loop since it will deadlock
         if threading.current_thread() == unsync.thread and not self.concurrent_future.done():
-            raise asyncio.InvalidStateError
+            raise asyncio.InvalidStateError("Calling result() in an unsync method is not allowed")
         # Wait on the concurrent Future outside unsync.thread
         return self.concurrent_future.result(*args, **kwargs)
 
