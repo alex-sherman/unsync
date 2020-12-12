@@ -38,7 +38,9 @@ class unsync(object):
         assert _isfunction(func)
         self.func = func
         functools.update_wrapper(self, func)
-        unsync.unsync_functions[(func.__module__, func.__name__)] = func
+        # On Windows/Mac MP turns the main module into __mp_main__ in multiprocess targets
+        module = "__main__" if func.__module__ == "__mp_main__" else func.__module__
+        unsync.unsync_functions[(module, func.__name__)] = func
 
     def __call__(self, *args, **kwargs):
         if self.func is None:
@@ -71,9 +73,6 @@ def _isfunction(obj):
 
 
 def _multiprocess_target(func_name, *args, **kwargs):
-    # On Windows MP turns the main module into __mp_main__ in multiprocess targets
-    if os.name == 'nt' and func_name[0] == '__main__':
-        func_name = ('__mp_main__', func_name[1])
     __import__(func_name[0])
     return unsync.unsync_functions[func_name](*args, **kwargs)
 
