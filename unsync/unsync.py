@@ -7,11 +7,18 @@ import os
 from threading import Thread
 from typing import Generic, TypeVar
 
+if os.name == "posix":
+    import uvloop
 
 class unsync(object):
     thread_executor = concurrent.futures.ThreadPoolExecutor()
     process_executor = None
-    loop = asyncio.new_event_loop()
+    
+    if os.name == "posix":
+        loop = uvloop.new_event_loop()
+    else:
+        loop = asyncio.new_event_loop()
+        
     thread = None
     unsync_functions = {}
 
