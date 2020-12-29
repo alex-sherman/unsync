@@ -69,7 +69,7 @@ class unsync(object):
 
 
 def _isfunction(obj):
-    return inspect.isfunction(obj) or inspect._signature_is_functionlike(obj)
+    return callable(obj)
 
 
 def _multiprocess_target(func_name, *args, **kwargs):
