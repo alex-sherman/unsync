@@ -2,6 +2,7 @@ from functools import wraps
 from unittest import TestCase
 import asyncio
 import concurrent
+import time
 
 from unsync import unsync
 from unsync.unsync import Unfuture
@@ -36,6 +37,19 @@ class DecoratorTests(TestCase):
         for result in results:
             result.result()
         self.assertEqual(list(sorted(calls)), calls)
+
+    def test_apply_to_function(self):
+        async def sleep():
+            await asyncio.sleep(0.1)
+            return "derp"
+        unsync_sleep = unsync(sleep)
+
+        self.assertEqual(unsync_sleep().result(), "derp")
+
+    def test_apply_to_built_in(self):
+        unsync_sleep = unsync(time.sleep)
+
+        unsync_sleep(0.1).result()
 
     def test_future_integration(self):
         asyncio_future = asyncio.Future(loop=unsync.loop)
