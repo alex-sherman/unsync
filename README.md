@@ -1,52 +1,57 @@
 # unsync
-Unsynchronize `asyncio` by using an ambient event loop in a separate thread.
+Unsynchronize `asyncio` by using an ambient event loop, or executing in separate threads or processes.
 
-# Rules for unsync
-1. Mark all async functions with `@unsync`. May also mark regular functions to execute in a separate thread.
-    * All `@unsync` functions, async or not, return an `Unfuture`
-2. All `Futures` must be `Unfutures` which includes the result of an `@unsync` function call,
-    or wrapping `Unfuture(asyncio.Future)` or `Unfuture(concurrent.Future)`.
-    `Unfuture` combines the behavior of `asyncio.Future` and `concurrent.Future`:
-    * `Unfuture.set_value` is threadsafe unlike `asyncio.Future`
-    * `Unfuture` instances can be awaited, even if made from `concurrent.Future`
-    * `Unfuture.result()` is a blocking operation *except* in `unsync.loop`/`unsync.thread` where
+# Quick Overview
+
+Functions marked with the `@unsync` decorator will behave in one of the following ways:
+* `async` functions will run in the `unsync.loop` event loop executed from `unsync.thread`
+* Regular functions will execute in `unsync.thread_executor`, a `ThreadPoolExecutor`
+  * Useful for IO bounded work that does not support `asyncio`
+* Regular functions marked with `@unsync(cpu_bound=True)` will execute in `unsync.process_executor`, a `ProcessPoolExecutor`
+  * Useful for CPU bounded work
+
+All `@unsync` functions will return an `Unfuture` object.
+This new future type combines the behavior of `asyncio.Future` and `concurrent.Future` with the following changes:
+* `Unfuture.set_result` is threadsafe unlike `asyncio.Future`
+* `Unfuture` instances can be awaited, even if made from `concurrent.Future`
+* `Unfuture.result()` is a blocking operation *except* in `unsync.loop`/`unsync.thread` where
     it behaves like `asyncio.Future.result` and will throw an exception if the future is not done
-3. Functions will execute in different contexts:
-    * `@unsync` async functions will execute in an event loop in `unsync.thread`
-    * `@unsync` regular functions will execute in `unsync.thread_executor`, a `ThreadPoolExecutor`
-    * `@unsync(cpu_bound=True)` regular functions will execute in `unsync.process_executor`, a `ProcessPoolExecutor`
-
 
 # Examples
 ## Simple Sleep
 A simple sleeping example with `asyncio`:
 ```python
 async def sync_async():
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(1)
     return 'I hate event loops'
 
-result = asyncio.run(sync_async())
-print(result)
+result1 = asyncio.run(sync_async())
+result2 = asyncio.run(sync_async())
+print(result1 + result2)
+# Takes 2 seconds to run
 ```
 
 Same example with `unsync`:
 ```python
 @unsync
 async def unsync_async():
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(1)
     return 'I like decorators'
 
-print(unsync_async().result())
+unfuture1 = unsync_async()
+unfuture2 = unsync_async()
+print(unfuture1.result() + unfuture2.result())
+# Takes 1 second to run
 ```
 
-## Threading a synchronous function
+## Multi-threading an IO-bound function
 Synchronous functions can be made to run asynchronously by executing them in a `concurrent.ThreadPoolExecutor`.
 This can be easily accomplished by marking the regular function `@unsync`.
 ```python
 @unsync
 def non_async_function(seconds):
     time.sleep(seconds)
-    return 'Run in parallel!'
+    return 'Run concurrently!'
 
 start = time.time()
 tasks = [non_async_function(0.1) for _ in range(10)]
@@ -55,11 +60,11 @@ print('Executed in {} seconds'.format(time.time() - start))
 ```
 Which prints:
 
-    ['Run in parallel!', 'Run in parallel!', ...]
+    ['Run concurrently!', 'Run concurrently!', ...]
     Executed in 0.10807514190673828 seconds
 
 ## Continuations
-Using Unfuture.then chains asynchronous calls and returns an Unfuture that wraps both the source, and continuation.
+Using `Unfuture.then` chains asynchronous calls and returns an `Unfuture` that wraps both the source, and continuation.
 The continuation is invoked with the source Unfuture as the first argument.
 Continuations can be regular functions (which will execute synchronously), or `@unsync` functions.
 ```python
@@ -120,7 +125,7 @@ Which prints:
 
     {0: 2, 1: 4, 2: 6, 3: 8, 4: 10, 5: 12, 6: 14, 7: 16, 8: 18, 9: 20}
     Executed in 0.22115683555603027 seconds
-    
+
 ## Preserving typing
 As far as we know it is not possible to change the return type of a method or function using a decorator.
 Therefore, we need a workaround to properly use IntelliSense. You have three options in general:
