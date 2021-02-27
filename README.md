@@ -25,10 +25,16 @@ async def sync_async():
     await asyncio.sleep(1)
     return 'I hate event loops'
 
-result1 = asyncio.run(sync_async())
-result2 = asyncio.run(sync_async())
-print(result1 + result2)
-# Takes 2 seconds to run
+
+async def main():
+    future1 = asyncio.create_task(sync_async())
+    future2 = asyncio.create_task(sync_async())
+
+    await future1, future2
+
+    print(future1.result() + future2.result())
+
+asyncio.run(main())
 ```
 
 Same example with `unsync`:
