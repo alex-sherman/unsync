@@ -35,6 +35,7 @@ async def main():
     print(future1.result() + future2.result())
 
 asyncio.run(main())
+# Takes 1 second to run
 ```
 
 Same example with `unsync`:
