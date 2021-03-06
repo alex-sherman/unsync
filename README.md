@@ -156,3 +156,20 @@ Therefore, we need a workaround to properly use IntelliSense. You have three opt
     future_result = function_name('b')
     self.assertEqual('ba', future_result.result())
    ```
+
+## Custom Event Loops
+In order to use custom event loops, be sure to set the event loop policy before calling any `@unsync` methods.
+For example, to use `uvloop` simply:
+
+```python
+import unsync
+import uvloop
+
+@unsync
+async def main():
+    # Main entry-point.
+    ...
+
+uvloop.install() # Equivalent to asyncio.set_event_loop_policy(EventLoopPolicy())
+main()
+```

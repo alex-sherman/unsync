@@ -11,14 +11,20 @@ from typing import Generic, TypeVar
 class unsync(object):
     thread_executor = concurrent.futures.ThreadPoolExecutor()
     process_executor = None
-    loop = asyncio.new_event_loop()
+    loop = None
     thread = None
     unsync_functions = {}
 
     @staticmethod
-    def thread_target(loop):
+    def _thread_target(loop):
         asyncio.set_event_loop(loop)
         loop.run_forever()
+
+    @staticmethod
+    def _init_loop():
+        unsync.loop = asyncio.new_event_loop()
+        unsync.thread = Thread(target=unsync._thread_target, args=(unsync.loop,), daemon=True)
+        unsync.thread.start()
 
     def __init__(self, *args, **kwargs):
         self.args = []
@@ -49,6 +55,8 @@ class unsync(object):
         if inspect.iscoroutinefunction(self.func):
             if self.cpu_bound:
                 raise TypeError('The CPU bound unsync function %s may not be async or a coroutine' % self.func.__name__)
+            if unsync.loop is None:
+                unsync._init_loop()
             future = self.func(*args, **kwargs)
         else:
             if self.cpu_bound:
@@ -136,6 +144,3 @@ class Unfuture(Generic[T]):
             return await result
         return result
 
-
-unsync.thread = Thread(target=unsync.thread_target, args=(unsync.loop,), daemon=True)
-unsync.thread.start()
