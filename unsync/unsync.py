@@ -7,24 +7,42 @@ import os
 from threading import Thread
 from typing import Generic, TypeVar
 
+class unsync_meta(type):
 
-class unsync(object):
+    def _init_loop(cls):
+        print("DERP")
+        cls._loop = asyncio.new_event_loop()
+        cls._thread = Thread(target=cls._thread_target, args=(cls._loop,), daemon=True)
+        cls._thread.start()
+
+    @property
+    def loop(cls):
+        if getattr(cls, '_loop', None) is None:
+            unsync_meta._init_loop(cls)
+        return cls._loop
+
+    @property
+    def thread(cls):
+        if getattr(cls, '_thread', None) is None:
+            unsync_meta._init_loop(cls)
+        return cls._thread
+
+    @property
+    def process_executor(cls):
+        if getattr(cls, '_process_executor', None) is None:
+            cls._process_executor = concurrent.futures.ProcessPoolExecutor()
+        return cls._process_executor
+
+
+class unsync(object, metaclass=unsync_meta):
     thread_executor = concurrent.futures.ThreadPoolExecutor()
     process_executor = None
-    loop = None
-    thread = None
     unsync_functions = {}
 
     @staticmethod
     def _thread_target(loop):
         asyncio.set_event_loop(loop)
         loop.run_forever()
-
-    @staticmethod
-    def _init_loop():
-        unsync.loop = asyncio.new_event_loop()
-        unsync.thread = Thread(target=unsync._thread_target, args=(unsync.loop,), daemon=True)
-        unsync.thread.start()
 
     def __init__(self, *args, **kwargs):
         self.args = []
@@ -55,13 +73,9 @@ class unsync(object):
         if inspect.iscoroutinefunction(self.func):
             if self.cpu_bound:
                 raise TypeError('The CPU bound unsync function %s may not be async or a coroutine' % self.func.__name__)
-            if unsync.loop is None:
-                unsync._init_loop()
             future = self.func(*args, **kwargs)
         else:
             if self.cpu_bound:
-                if unsync.process_executor is None:
-                    unsync.process_executor = concurrent.futures.ProcessPoolExecutor()
                 future = unsync.process_executor.submit(
                     _multiprocess_target, (self.func.__module__, self.func.__name__), *args, **kwargs)
             else:
