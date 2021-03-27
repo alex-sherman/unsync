@@ -10,7 +10,6 @@ from typing import Generic, TypeVar
 class unsync_meta(type):
 
     def _init_loop(cls):
-        print("DERP")
         cls._loop = asyncio.new_event_loop()
         cls._thread = Thread(target=cls._thread_target, args=(cls._loop,), daemon=True)
         cls._thread.start()
