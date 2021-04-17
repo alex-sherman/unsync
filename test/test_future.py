@@ -45,9 +45,9 @@ class FutureTests(TestCase):
 
     def test_async_continuation(self):
         @unsync
-        async def continuation(task):
+        async def continuation(result):
             await asyncio.sleep(0.1)
-            return task.result() + 'derp'
+            return result + 'derp'
 
         @unsync
         async def source():
@@ -58,8 +58,8 @@ class FutureTests(TestCase):
         self.assertEqual('faffderp', res.result())
 
     def test_sync_continuation(self):
-        def continuation(task):
-            return task.result() + 'derp'
+        def continuation(result):
+            return result + 'derp'
 
         @unsync
         async def source():
@@ -71,8 +71,8 @@ class FutureTests(TestCase):
 
     def test_chained_continuation(self):
         def cont_gen(text):
-            def continuation(task):
-                return task.result() + text
+            def continuation(result):
+                return result + text
 
             return continuation
 
