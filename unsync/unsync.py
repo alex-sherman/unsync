@@ -16,19 +16,19 @@ class unsync_meta(type):
 
     @property
     def loop(cls):
-        if not hasattr(cls, '_loop'):
+        if getattr(cls, '_loop', None) is None:
             unsync_meta._init_loop(cls)
         return cls._loop
 
     @property
     def thread(cls):
-        if not hasattr(cls, '_thread'):
+        if getattr(cls, '_thread', None) is None:
             unsync_meta._init_loop(cls)
         return cls._thread
 
     @property
     def process_executor(cls):
-        if not hasattr(cls, '_process_executor'):
+        if getattr(cls, '_process_executor', None) is None:
             cls._process_executor = concurrent.futures.ProcessPoolExecutor()
         return cls._process_executor
 
