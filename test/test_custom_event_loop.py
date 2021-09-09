@@ -4,13 +4,13 @@ import asyncio
 from unsync import unsync
 
 
-class TestEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+class EventLoopTestPolicy(asyncio.DefaultEventLoopPolicy):
     def new_event_loop(self):
         loop = super().new_event_loop()
         loop.derp = "faff"
         return loop
 
-asyncio.set_event_loop_policy(TestEventLoopPolicy())
+asyncio.set_event_loop_policy(EventLoopTestPolicy())
 
 
 class CustomEventTest(TestCase):
