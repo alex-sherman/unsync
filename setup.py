@@ -3,7 +3,7 @@ from pathlib import Path
 
 setup(
     name='unsync',
-    version='1.3.2',
+    version='1.4.0',
     packages=['unsync'],
     url='https://github.com/alex-sherman/unsync',
     license='MIT',
