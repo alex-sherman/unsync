@@ -152,7 +152,7 @@ class Unfuture(Generic[T]):
     @unsync
     async def then(self, continuation):
         await self
-        result = continuation(self)
+        result = continuation(self.result())
         if hasattr(result, '__await__'):
             return await result
         return result
