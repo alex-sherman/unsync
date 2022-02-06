@@ -3,7 +3,6 @@ import concurrent
 import functools
 import inspect
 import threading
-import os
 from threading import Thread
 from typing import Generic, TypeVar
 
@@ -156,4 +155,3 @@ class Unfuture(Generic[T]):
         if hasattr(result, '__await__'):
             return await result
         return result
-
