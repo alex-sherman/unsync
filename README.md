@@ -1,5 +1,8 @@
 # unsync
-Unsynchronize `asyncio` by using an ambient event loop, or executing in separate threads or processes.
+
+Is a decorator so you don't anymore to prefix with async a function calling an async function.
+
+It unsynchronize `asyncio` by using an ambient event loop, or executing in separate threads or processes. That
 
 # Quick Overview
 
@@ -21,47 +24,49 @@ This new future type combines the behavior of `asyncio.Future` and `concurrent.F
 ## Simple Sleep
 A simple sleeping example with `asyncio`:
 ```python
-async def sync_async():
+async def do_something():
     await asyncio.sleep(1)
     return 'I hate event loops'
 
 
-async def main():
-    future1 = asyncio.create_task(sync_async())
-    future2 = asyncio.create_task(sync_async())
+async def entrypoint():
+    future1 = asyncio.create_task(do_something())
+    future2 = asyncio.create_task(do_something())
 
     await future1, future2
 
     print(future1.result() + future2.result())
 
-asyncio.run(main())
+asyncio.run(entrypoint())
 # Takes 1 second to run
 ```
 
 Same example with `unsync`:
 ```python
 @unsync
-async def unsync_async():
+async def do_something():
     await asyncio.sleep(1)
     return 'I like decorators'
 
-unfuture1 = unsync_async()
-unfuture2 = unsync_async()
+unfuture1 = do_something()
+unfuture2 = do_something()
 print(unfuture1.result() + unfuture2.result())
 # Takes 1 second to run
 ```
+
+you don't need an entreypoint async function anymore and to start an async loop
 
 ## Multi-threading an IO-bound function
 Synchronous functions can be made to run asynchronously by executing them in a `concurrent.ThreadPoolExecutor`.
 This can be easily accomplished by marking the regular function `@unsync`.
 ```python
 @unsync
-def non_async_function(seconds):
+def do_something(seconds):
     time.sleep(seconds)
     return 'Run concurrently!'
 
 start = time.time()
-tasks = [non_async_function(0.1) for _ in range(10)]
+tasks = [do_something(0.1) for _ in range(10)]
 print([task.result() for task in tasks])
 print('Executed in {} seconds'.format(time.time() - start))
 ```
@@ -99,7 +104,7 @@ Which prints:
 We'll start by converting a regular synchronous function into a threaded `Unfuture` which will begin our request.
 ```python
 @unsync
-def non_async_function(num):
+def do_something(num):
     time.sleep(0.1)
     return num, num + 1
 ```
@@ -121,10 +126,10 @@ async def result_processor(tasks):
         output[num] = res
     return output
 ```
-Executing the full chain of `non_async_function`&rightarrow;`result_continuation`&rightarrow;`result_processor` would look like:
+Executing the full chain of `do_something`&rightarrow;`result_continuation`&rightarrow;`result_processor` would look like:
 ```python
 start = time.time()
-print(result_processor([non_async_function(i).then(result_continuation) for i in range(10)]).result())
+print(result_processor([do_something(i).then(result_continuation) for i in range(10)]).result())
 print('Executed in {} seconds'.format(time.time() - start))
 ```
 
@@ -166,10 +171,10 @@ import unsync
 import uvloop
 
 @unsync
-async def main():
-    # Main entry-point.
+async def entrypoint():
+    # start of programm
     ...
 
 uvloop.install() # Equivalent to asyncio.set_event_loop_policy(EventLoopPolicy())
-main()
+entrypoint()
 ```
