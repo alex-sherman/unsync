@@ -2,7 +2,7 @@
 
 Is a decorator so you don't have to prefix async a function calling an async function.
 
-It unsynchronize `asyncio` by using an ambient event loop, or executing in separate threads or processes. That
+It unsynchronize `asyncio` by using an ambient event loop, or executing in separate threads or processes.
 
 # Quick Overview
 
