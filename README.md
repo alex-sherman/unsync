@@ -162,7 +162,7 @@ In order to use custom event loops, be sure to set the event loop policy before 
 For example, to use `uvloop` simply:
 
 ```python
-import unsync
+from unsync import unsync
 import uvloop
 
 @unsync
